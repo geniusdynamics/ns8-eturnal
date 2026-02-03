@@ -26,26 +26,43 @@ agent.set_env("TRAEFIK_HOST", host)
 agent.set_env("TRAEFIK_HTTP2HTTPS", h2hs)
 agent.set_env("TRAEFIK_LETS_ENCRYPT", le)
 
+env_tcp_ports = os.environ["TCP_PORTS"].split(",")
+env_one = env_tcp_ports[0]
+env_two = env_tcp_ports[1]
 # Make sure everything is saved inside the environment file
 # just before starting systemd unit
+agent.set_env("TCP_PORT_ONE", env_one)
+agent.set_env("TCP_PORT_TWO", env_two)
 agent.dump_env()
 
 # Find default traefik instance for current node
-default_traefik_id = agent.resolve_agent_id('traefik@node')
+default_traefik_id = agent.resolve_agent_id("traefik@node")
 if default_traefik_id is None:
     sys.exit(2)
 
+
 response = agent.tasks.run(
-    agent_id=agent.resolve_agent_id('traefik@node'),
-    action='set-route',
+    agent_id=agent.resolve_agent_id("traefik@node"),
+    action="set-route",
     data={
-        'instance': os.environ['MODULE_ID'],
-        'url':  'http://127.0.0.1:' + os.environ["TCP_PORT"],
-        'host': host,
-        'http2https': h2hs,
-        'lets_encrypt': le
+        "instance": os.environ["MODULE_ID"],
+        "url": "http://127.0.0.1:" + env_one,
+        "host": host,
+        "http2https": h2hs,
+        "lets_encrypt": le,
+    },
+)
+response = agent.tasks.run(
+    agent_id=agent.resolve_agent_id("traefik@node"),
+    action="set-route",
+    data={
+        "instance": os.environ["MODULE_ID"] + "-eturnal",
+        "url": "http://127.0.0.1:" + env_two,
+        "host": "eturnal." + host,
+        "http2https": h2hs,
+        "lets_encrypt": le,
     },
 )
 
 # Check if traefik configuration has been successfull
-agent.assert_exp(response['exit_code'] == 0)
+agent.assert_exp(response["exit_code"] == 0)
