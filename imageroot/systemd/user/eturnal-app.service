@@ -18,7 +18,7 @@ TimeoutStopSec=70
 ExecStartPre=/bin/mkdir -p tmp
 ExecStartPre=/bin/rm -f %t/eturnal-app.pid %t/eturnal-app.ctr-id
 ExecStartPre=-runagent discover-smarthost
-ExecStart=/usr/bin/podman run --conmon-pidfile %t/eturnal-app.pid  --cidfile %t/eturnal-app.ctr-id --cgroups=no-conmon  --pod-id-file %t/eturnal.pod-id --replace -d --name  eturnal-app -v ./eturnal.yml:/etc/eturnal.yml:ro  --env-file eturnal.env  ${ETURNAL_IMAGE}  
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/eturnal-app.pid  --cidfile %t/eturnal-app.ctr-id --cgroups=no-conmon  --pod-id-file %t/eturnal.pod-id --replace -d --name  eturnal-app -e ETURNAL_RELAY_MIN_PORT=50000 -e ETURNAL_RELAY_MAX_PORT=50500 -v ./eturnal.yml:/etc/eturnal.yml:ro  --env-file eturnal.env  ${ETURNAL_IMAGE}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/eturnal-app.ctr-id -t 10
 ExecReload=/usr/bin/podman kill -s HUP eturnal-app
 SyslogIdentifier=%u
