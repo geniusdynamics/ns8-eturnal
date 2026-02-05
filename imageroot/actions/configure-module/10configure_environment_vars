@@ -16,6 +16,8 @@ data = json.load(sys.stdin)
 #This is specific to you module, so you need to change it accordingly.
 #agent.dump_env()
  
-eturnal = { 
+eturnal = {
+    "ETURNAL_RELAY_MIN_PORT": 50000,
+    "ETURNAL_RELAY_MAX_PORT": 50500,
 } 
 agent.write_envfile("eturnal.env", eturnal) 
