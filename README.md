@@ -13,7 +13,11 @@ add-module ghcr.io/geniusdynamics/eturnal:latest 1
 The command returns the instance name:
 
 ```json
-{"module_id": "eturnal1", "image_name": "eturnal", "image_url": "ghcr.io/geniusdynamics/eturnal:latest"}
+{
+  "module_id": "eturnal1",
+  "image_name": "eturnal",
+  "image_url": "ghcr.io/geniusdynamics/eturnal:latest"
+}
 ```
 
 ## Configure
@@ -22,11 +26,11 @@ Assuming the eturnal instance is named `eturnal1`.
 
 Launch `configure-module` with the following parameters:
 
-| Parameter | Description | Type |
-|-----------|-------------|------|
-| `host` | Fully qualified domain name for the application | string |
-| `http2https` | Enable HTTP to HTTPS redirection | boolean (true/false) |
-| `lets_encrypt` | Enable Let's Encrypt certificate | boolean (true/false) |
+| Parameter      | Description                                     | Type                 |
+| -------------- | ----------------------------------------------- | -------------------- |
+| `host`         | Fully qualified domain name for the application | string               |
+| `http2https`   | Enable HTTP to HTTPS redirection                | boolean (true/false) |
+| `lets_encrypt` | Enable Let's Encrypt certificate                | boolean (true/false) |
 
 Example:
 
@@ -63,7 +67,7 @@ remove-module --no-preserve eturnal1
 
 ## Smarthost Settings Discovery
 
-Some configuration settings, like the smarthost setup, are not part of the `configure-module` action input. Instead, they are discovered by monitoring Redis keys. 
+Some configuration settings, like the smarthost setup, are not part of the `configure-module` action input. Instead, they are discovered by monitoring Redis keys.
 
 To ensure the module stays up-to-date with the centralized [smarthost setup](https://geniusdynamics.github.io/ns8-core/core/smarthost/), the `bin/discover-smarthost` command runs every time eturnal starts. This refreshes the `state/smarthost.env` file with current values from Redis.
 
@@ -113,6 +117,7 @@ podman ps
 ```
 
 Example output:
+
 ```
 CONTAINER ID  IMAGE                                      COMMAND               CREATED        STATUS        PORTS                    NAMES
 d292c6ff28e9  localhost/podman-pause:4.6.1-1702418000                          9 minutes ago  Up 9 minutes  127.0.0.1:20015->80/tcp  80b8de25945f-infra
@@ -130,6 +135,16 @@ Run a shell inside the container:
 
 ```
 podman exec -ti eturnal-app sh
+```
+
+## After Installtion
+
+After installtion run this command to get the credentials
+
+```bash
+runagent -m eturnal1 podman exec -it eturnal-app /bin/sh
+
+$eturnalctl credentials
 ```
 
 ## Testing
