@@ -1,16 +1,52 @@
-# ns8-eturnal
+# 🔄 NS8 Eturnal
 
-This is a template module for [NethServer 8](https://github.com/geniusdynamics/ns8-core).
+[![NethServer 8](https://img.shields.io/badge/NethServer-8-blue?style=flat-square&logo=linux)](https://github.com/geniusdynamics/ns8-core)
+[![License](https://img.shields.io/badge/License-GPL--3.0-green?style=flat-square)](LICENSE)
+[![Weblate](https://img.shields.io/badge/Weblate-Translate-brightgreen?style=flat-square&logo=weblate)](https://hosted.weblate.org/projects/ns8/)
 
-## Install
+> A modern **STUN/TURN server** module for [NethServer 8](https://github.com/geniusdynamics/ns8-core), built on the [eturnal](https://eturnal.net/) server for reliable WebRTC connectivity.
 
-Instantiate the module:
+---
+
+## 📑 Table of Contents
+
+- [Overview](#-overview)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Getting Credentials](#-getting-credentials)
+- [Management](#-management)
+- [Debugging](#-debugging)
+- [Testing](#-testing)
+- [Translations](#-translations)
+- [Uninstallation](#-uninstallation)
+
+---
+
+## 🎯 Overview
+
+This module provides a containerized **eturnal** instance for NethServer 8, enabling:
+
+- 🔗 **STUN** (Session Traversal Utilities for NAT) services
+- 🔄 **TURN** (Traversal Using Relays around NAT) relay services
+- 🔒 Secure WebRTC connectivity for video conferencing and real-time communication
+- ⚡ Automatic certificate management with Let's Encrypt
+- 🛡️ Built-in security with configurable access controls
+
+---
+
+## 🚀 Installation
+
+### Quick Start
+
+Instantiate the module using the NS8 CLI:
 
 ```bash
 add-module ghcr.io/geniusdynamics/eturnal:latest 1
 ```
 
-The command returns the instance name:
+### Installation Output
+
+Upon successful installation, you'll receive:
 
 ```json
 {
@@ -20,21 +56,23 @@ The command returns the instance name:
 }
 ```
 
-## Configure
+---
 
-Assuming the eturnal instance is named `eturnal1`.
+## ⚙️ Configuration
 
-Launch `configure-module` with the following parameters:
+### Available Parameters
 
-| Parameter      | Description                                     | Type                 |
-| -------------- | ----------------------------------------------- | -------------------- |
-| `host`         | Fully qualified domain name for the application | string               |
-| `http2https`   | Enable HTTP to HTTPS redirection                | boolean (true/false) |
-| `lets_encrypt` | Enable Let's Encrypt certificate                | boolean (true/false) |
+Configure your eturnal instance using the `configure-module` action:
 
-Example:
+| Parameter | Description | Type | Default |
+|-----------|-------------|------|---------|
+| `host` | Fully qualified domain name (FQDN) for the application | `string` | — |
+| `http2https` | Enable automatic HTTP to HTTPS redirection | `boolean` | `true` |
+| `lets_encrypt` | Enable automatic Let's Encrypt SSL certificate | `boolean` | `false` |
 
-```
+### Configuration Example
+
+```bash
 api-cli run configure-module --agent module/eturnal1 --data - <<EOF
 {
   "host": "eturnal.domain.com",
@@ -44,75 +82,82 @@ api-cli run configure-module --agent module/eturnal1 --data - <<EOF
 EOF
 ```
 
-This command will:
+### What This Does
 
-- Start and configure the eturnal instance
-- Configure a virtual host for Traefik to access the instance
+✅ Starts and configures the eturnal service  
+✅ Sets up a virtual host for Traefik reverse proxy  
+✅ Configures SSL/TLS certificates  
+✅ Applies network and firewall rules
 
-## Get Configuration
-
-Retrieve the current configuration:
+### Retrieve Current Configuration
 
 ```bash
 api-cli run get-configuration --agent module/eturnal1
 ```
 
-## Uninstall
+---
 
-To remove the instance:
+## 🔐 Getting Credentials
+
+After installation, retrieve your TURN server credentials:
 
 ```bash
-remove-module --no-preserve eturnal1
+runagent -m eturnal1 podman exec -it eturnal-app /bin/sh
 ```
 
-## Smarthost Settings Discovery
+Then, inside the container:
 
-Some configuration settings, like the smarthost setup, are not part of the `configure-module` action input. Instead, they are discovered by monitoring Redis keys.
+```bash
+eturnalctl credentials
+```
 
-To ensure the module stays up-to-date with the centralized [smarthost setup](https://geniusdynamics.github.io/ns8-core/core/smarthost/), the `bin/discover-smarthost` command runs every time eturnal starts. This refreshes the `state/smarthost.env` file with current values from Redis.
+Use these credentials to configure your WebRTC applications (e.g., Jitsi, Nextcloud Talk, Element).
 
-If the smarthost setup changes while eturnal is running, the event handler `events/smarthost-changed/10reload_services` automatically restarts the main module service.
+---
 
-See also the `systemd/user/eturnal.service` file.
+## 🔧 Management
 
-**Note:** This setting discovery is provided as an example of how the module operates. It can be rewritten or removed entirely based on your needs.
+### Smarthost Settings Discovery
 
-## Debug
+The module integrates with NS8's centralized **smarthost** configuration:
 
-The following CLI commands are useful for debugging:
+- **Auto-discovery**: The `bin/discover-smarthost` command runs at startup to sync settings from Redis
+- **Live updates**: The `events/smarthost-changed/10reload_services` handler automatically restarts services when smarthost settings change
+- **Configuration file**: Settings are stored in `state/smarthost.env`
+
+> 💡 **Note**: This is an example implementation. You can customize or remove it based on your requirements.
+
+---
+
+## 🐛 Debugging
 
 ### Environment Variables
 
-The module runs under an agent that initializes many environment variables in `/home/eturnal1/.config/state`. To verify them:
+View the module's environment:
 
-```
+```bash
 runagent -m eturnal1 env
 ```
 
-To become the runagent and test scripts with all environment variables initialized:
+Enter an interactive shell with all environment variables loaded:
 
-```
+```bash
 runagent -m eturnal1
 ```
 
-The PATH will be:
+Verify the PATH:
 
-```
+```bash
 echo $PATH
-/home/eturnal1/.config/bin:/usr/local/agent/pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/usr/
+# Output: /home/eturnal1/.config/bin:/usr/local/agent/pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/usr/
 ```
 
-### Container Debugging
-
-To debug a container or see the environment inside:
-
-```
-runagent -m eturnal1
-```
+### Container Operations
 
 List running containers:
 
-```
+```bash
+runagent -m eturnal1
 podman ps
 ```
 
@@ -125,43 +170,69 @@ d8df02bf6f4a  docker.io/library/mariadb:10.11.5          --character-set-s...  9
 9e58e5bd676f  docker.io/library/nginx:stable-alpine3.17  nginx -g daemon o...  9 minutes ago  Up 9 minutes  127.0.0.1:20015->80/tcp  eturnal-app
 ```
 
+### Container Debugging
+
 View environment variables inside a container:
 
-```
+```bash
 podman exec eturnal-app env
 ```
 
-Run a shell inside the container:
+Open an interactive shell:
 
-```
+```bash
 podman exec -ti eturnal-app sh
 ```
 
-## After Installtion
+---
 
-After installtion run this command to get the credentials
+## 🧪 Testing
 
-```bash
-runagent -m eturnal1 podman exec -it eturnal-app /bin/sh
-
-$eturnalctl credentials
-```
-
-## Testing
-
-Test the module using the `test-module.sh` script:
+Run the test suite using the provided script:
 
 ```bash
 ./test-module.sh <NODE_ADDR> ghcr.io/geniusdynamics/eturnal:latest
 ```
 
-Tests are written using [Robot Framework](https://robotframework.org/).
+Tests are written using [Robot Framework](https://robotframework.org/) for comprehensive integration testing.
 
-## UI Translation
+---
+
+## 🌍 Translations
 
 This module is translated using [Weblate](https://hosted.weblate.org/projects/ns8/).
 
-To set up the translation process:
+### Setting Up Translations
 
-1. Add the [GitHub Weblate app](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup) to your repository
-2. Add your repository to [hosted.weblate.org](https://hosted.weblate.org) or ask a GeniusDynamics developer to add it to the NS8 Weblate project
+1. **Install the GitHub Weblate app**  
+   Follow the [official documentation](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup)
+
+2. **Add your repository** to [hosted.weblate.org](https://hosted.weblate.org) or contact a GeniusDynamics developer to add it to the NS8 Weblate project
+
+---
+
+## 🗑️ Uninstallation
+
+To completely remove the eturnal instance:
+
+```bash
+remove-module --no-preserve eturnal1
+```
+
+> ⚠️ **Warning**: The `--no-preserve` flag permanently deletes all data. Remove this flag to retain data for future reinstallation.
+
+---
+
+## 📄 License
+
+This project is licensed under the **GPL-3.0 License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Made with ❤️ for the NethServer Community**
+
+[Report Bug](https://github.com/geniusdynamics/ns8-eturnal/issues) · [Request Feature](https://github.com/geniusdynamics/ns8-eturnal/issues) · [Documentation](https://geniusdynamics.github.io/ns8-core/)
+
+</div>
