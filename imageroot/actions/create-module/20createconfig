@@ -1,4 +1,6 @@
 #!/bin/bash
+
+SECRET=$(openssl rand -base64 48)
 cat >eturnal.yml <<EOF
 # eturnal STUN/TURN server configuration file.
 #
@@ -10,7 +12,7 @@ cat >eturnal.yml <<EOF
 eturnal:
 
   ## Shared secret for deriving temporary TURN credentials (default: $RANDOM):
-  #secret: "long-and-cryptic"
+  secret: "$SECRET"
 
   listen:
     -
