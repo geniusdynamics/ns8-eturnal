@@ -64,11 +64,11 @@ Upon successful installation, you'll receive:
 
 Configure your eturnal instance using the `configure-module` action:
 
-| Parameter | Description | Type | Default |
-|-----------|-------------|------|---------|
-| `host` | Fully qualified domain name (FQDN) for the application | `string` | — |
-| `http2https` | Enable automatic HTTP to HTTPS redirection | `boolean` | `true` |
-| `lets_encrypt` | Enable automatic Let's Encrypt SSL certificate | `boolean` | `false` |
+| Parameter      | Description                                            | Type      | Default |
+| -------------- | ------------------------------------------------------ | --------- | ------- |
+| `host`         | Fully qualified domain name (FQDN) for the application | `string`  | —       |
+| `http2https`   | Enable automatic HTTP to HTTPS redirection             | `boolean` | `true`  |
+| `lets_encrypt` | Enable automatic Let's Encrypt SSL certificate         | `boolean` | `false` |
 
 ### Configuration Example
 
@@ -109,6 +109,13 @@ Then, inside the container:
 
 ```bash
 eturnalctl credentials
+```
+
+Or run
+
+```bash
+runagent -m eturnal1 podman exec eturnal-app sh -c 'eturnalctl credentials'
+
 ```
 
 Use these credentials to configure your WebRTC applications (e.g., Jitsi, Nextcloud Talk, Element).
