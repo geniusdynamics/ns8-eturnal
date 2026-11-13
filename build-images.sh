@@ -14,6 +14,9 @@ images=()
 repobase="${REPOBASE:-ghcr.io/geniusdynamics}"
 # Configure the image name
 reponame="eturnal"
+# Node.js 25+ no longer ships Corepack, install it from npm
+# renovate: datasource=npm packageName=corepack
+corepack_version=0.36.0
 
 # Create a new empty container image
 container=$(buildah from scratch)
@@ -21,7 +24,8 @@ container=$(buildah from scratch)
 # Reuse existing nodebuilder-eturnal container, to speed up builds
 if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-eturnal; then
 	echo "Pulling NodeJS runtime..."
-	buildah from --name nodebuilder-eturnal -v "${PWD}:/usr/src:Z" docker.io/library/node:lts
+	buildah from --name nodebuilder-eturnal -v "${PWD}:/usr/src:Z" docker.io/library/node:26.13.0-slim
+	buildah run nodebuilder-eturnal sh -c "npm install -g corepack@${corepack_version} && corepack enable"
 fi
 
 echo "Build static UI files with node..."
@@ -45,7 +49,7 @@ buildah config --entrypoint=/ \
 	--label="org.nethserver.authorizations=traefik@node:routeadm node:fwadm" \
 	--label="org.nethserver.tcp-ports-demand=2" \
 	--label="org.nethserver.rootfull=0" \
-	--label="org.nethserver.images=ghcr.io/processone/eturnal:latest" \
+	--label="org.nethserver.images=ghcr.io/processone/eturnal:1.12.3" \
 	"${container}"
 # Commit the image
 buildah commit "${container}" "${repobase}/${reponame}"
