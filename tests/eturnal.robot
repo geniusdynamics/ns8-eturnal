@@ -18,7 +18,9 @@ Check if eturnal can be configured
     Should Be Equal As Integers    ${rc}  0
 
 Check if eturnal works as expected
-    ${rc} =    Execute Command    bash -c 'for i in $(seq 1 60); do curl -k -s -o /dev/null -f --resolve ${HOST}:443:127.0.0.1 https://${HOST}/ && exit 0; sleep 5; done; exit 1'
+    # eturnal is a STUN/TURN server without a web interface: check that it
+    # accepts connections on its TURN port
+    ${rc} =    Execute Command    bash -c 'for i in $(seq 1 60); do timeout 3 bash -c "exec 3<>/dev/tcp/127.0.0.1/3478" && exit 0; sleep 5; done; exit 1'
     ...    return_rc=True  return_stdout=False
     Should Be Equal As Integers    ${rc}  0
 
