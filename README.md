@@ -124,6 +124,38 @@ Use these credentials to configure your WebRTC applications (e.g., Jitsi, Nextcl
 
 ## 🔧 Management
 
+### Upgrades and recovery from version 1.1.0
+
+The update action repairs state ownership with `podman unshare` before NS8
+extracts the new module image. Namespace UID/GID `0:0` maps to the module user;
+no host subordinate UID (such as `755360`) should be hardcoded. Existing
+configuration and TURN secrets are preserved. Configured services are restarted
+even if the previous service is failed or stopped.
+
+**First upgrade from an older module:** the old installation does not yet have
+the repair hook. NS8 performs extraction before running hooks from the new image,
+so a new image alone cannot guarantee that this first attempt succeeds. Run the
+following as root on the node hosting the module before updating (replace
+`eturnal1` with the affected module ID):
+
+```bash
+runagent -m eturnal1 sh -ec 'podman unshare chown -hR 0:0 -- "${AGENT_STATE_DIR:?}"'
+```
+
+If an update already failed with `chown ... state/eturnal.yml: Operation not
+permitted`, run the same repair and retry the update in the Software center.
+When retrying an image URL that NS8 already records as installed, force the retry
+so that extraction and environment updates are performed again:
+
+```bash
+api-cli run module/eturnal1/update-module --data '{"module_url":"ghcr.io/geniusdynamics/eturnal:latest","force":true}'
+```
+
+Use the fixed release tag instead of `latest` when upgrading stable installations.
+A failed extraction of the fixed image may already have installed the repair hook;
+a subsequent update attempt then repairs ownership before extraction. The explicit
+repair above also works when that hook has not been installed yet.
+
 ### Smarthost Settings Discovery
 
 The module integrates with NS8's centralized **smarthost** configuration:

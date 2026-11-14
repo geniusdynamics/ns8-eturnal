@@ -1,0 +1,18 @@
+name: Test upgrade hooks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check upgrade scripts
+        run: bash -n imageroot/actions/update-module/04repair_state_ownership imageroot/update-module.d/20restart
+      - name: Run regression tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v

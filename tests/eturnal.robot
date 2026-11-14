@@ -24,6 +24,23 @@ Check if eturnal works as expected
     ...    return_rc=True  return_stdout=False
     Should Be Equal As Integers    ${rc}  0
 
+Check if an update repairs subordinate ownership and recovers a stopped service
+    ${before} =    Execute Command    runagent -m ${module_id} sh -ec 'sha256sum "$AGENT_STATE_DIR/eturnal.yml"'
+    ${rc} =    Execute Command    runagent -m ${module_id} systemctl --user stop eturnal.service
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+    ${rc} =    Execute Command    runagent -m ${module_id} sh -ec 'podman unshare chown 9000:9000 "$AGENT_STATE_DIR/eturnal.yml"'
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+    ${rc} =    Execute Command    update-module ${IMAGE_URL} ${module_id} --force
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+    ${after} =    Execute Command    runagent -m ${module_id} sh -ec 'sha256sum "$AGENT_STATE_DIR/eturnal.yml"'
+    Should Be Equal    ${before}    ${after}
+    ${rc} =    Execute Command    runagent -m ${module_id} sh -ec 'test "$(stat -c %u "$AGENT_STATE_DIR/eturnal.yml")" = "$(id -u)" && systemctl --user is-active eturnal.service && systemctl --user is-active eturnal-app.service'
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+
 Check if eturnal is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
     ...    return_rc=True  return_stdout=False
