@@ -1,0 +1,14 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+set -euo pipefail
+exec 1>&2
+
+# Core's 05pullimages calls extract-image, which recursively chowns the
+# installation directory as the module user. Repair subordinate-UID files
+# before that step; update-module.d is too late.
+# Keep this hook self-contained so a retry can use it after partial extraction.
+state_dir=${AGENT_STATE_DIR:?AGENT_STATE_DIR is not set}
+if [[ -d "${state_dir}" ]]; then
+    podman unshare chown -hR 0:0 -- "${state_dir}"
+fi

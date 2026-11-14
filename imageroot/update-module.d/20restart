@@ -12,4 +12,8 @@ set -e
 # Redirect any output to the journal (stderr)
 exec 1>&2
 
-systemctl --user try-restart eturnal.service
+# A failed service is not active, so try-restart would leave it down after a
+# successful retry. Only configured (enabled) instances should be started.
+if systemctl --user --quiet is-enabled eturnal.service; then
+    systemctl --user restart eturnal.service
+fi
